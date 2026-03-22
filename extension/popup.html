@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 300px; background: #0d1117; font-family: system-ui, sans-serif; color: #e6edf3; padding: 16px; }
+    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .logo { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(135deg, #00d4aa, #0099ff); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .title { font-size: 13px; font-weight: 700; }
+    .version { font-size: 9px; color: #7d8590; }
+    .status { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 11px; }
+    .status.ok { background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3); color: #00d4aa; }
+    .status.err { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); color: #ff6b6b; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot.green { background: #00d4aa; }
+    .dot.red { background: #ff6b6b; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    .counts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .count-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 10px; text-align: center; }
+    .count-val { font-size: 20px; font-weight: 700; color: #00d4aa; }
+    .count-label { font-size: 8px; color: #7d8590; text-transform: uppercase; margin-top: 2px; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; margin-bottom: 8px; }
+    .btn-primary { background: linear-gradient(135deg, #00d4aa, #0099ff); color: #0d1117; }
+    .btn-primary:hover { opacity: 0.9; }
+    .settings { margin-top: 8px; }
+    .settings label { font-size: 9px; color: #7d8590; display: block; margin-bottom: 4px; }
+    .settings input { width: 100%; background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 6px 8px; color: #e6edf3; font-size: 10px; font-family: monospace; outline: none; }
+    .settings input:focus { border-color: #00d4aa; }
+    .settings .row { display: flex; gap: 6px; }
+    .btn-sm { background: #21262d; border: none; border-radius: 6px; padding: 6px 10px; color: #7d8590; font-size: 10px; cursor: pointer; white-space: nowrap; }
+    .btn-sm:hover { background: #00d4aa; color: #0d1117; }
+    .hint { font-size: 8px; color: #7d8590; text-align: center; margin-top: 8px; }
+    .hint kbd { background: #161b22; border: 1px solid #21262d; border-radius: 3px; padding: 1px 3px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">⚡</div>
+    <div>
+      <div class="title">SOON EXPERTISE</div>
+      <div class="version">v3.5 — File de missions</div>
+    </div>
+  </div>
+
+  <div class="status" id="agentStatus">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusLabel">Connexion...</span>
+  </div>
+
+  <div class="counts" id="counts">
+    <div class="count-card"><div class="count-val" id="cNew">-</div><div class="count-label">Nouvelles</div></div>
+    <div class="count-card"><div class="count-val" id="cReview">-</div><div class="count-label">À revoir</div></div>
+    <div class="count-card"><div class="count-val" id="cReady">-</div><div class="count-label">Prêtes</div></div>
+  </div>
+
+  <button class="btn btn-primary" id="btnOpen">📋 Ouvrir l'inbox des missions</button>
+
+  <div class="settings">
+    <label>🔑 Token agent local</label>
+    <div class="row">
+      <input type="password" id="tokenInput" placeholder="soon-local-..." />
+      <button class="btn-sm" id="saveToken">OK</button>
+    </div>
+  </div>
+
+  <div class="hint">
+    <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>E</kbd> ouvrir l'inbox ·
+    <kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>S</kbd> remplir
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

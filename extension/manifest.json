@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Soon Expertise",
+  "version": "3.5",
+  "description": "File de traitement synchronisée pour missions d'expertise médicale — soon-expertise.fr",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "https://app.soon-expertise.fr/*",
+    "http://127.0.0.1:9721/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "commands": {
+    "fill-form": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Remplir le formulaire SOON"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://app.soon-expertise.fr/*"],
+      "js": ["content.js"]
+    }
+  ]
+}

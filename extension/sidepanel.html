@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <!-- Header -->
+  <div class="sp-header">
+    <div class="sp-logo">⚡</div>
+    <div class="sp-title">SOON EXPERTISE</div>
+    <div class="sp-status" id="connStatus">
+      <span class="sp-dot" id="connDot"></span>
+      <span id="connLabel">...</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="inbox">📥 Inbox <span class="sp-badge" id="badgeInbox">0</span></button>
+    <button class="sp-tab" data-tab="review">⚠️ À revoir <span class="sp-badge" id="badgeReview">0</span></button>
+    <button class="sp-tab" data-tab="ready">✅ Prêtes <span class="sp-badge" id="badgeReady">0</span></button>
+    <button class="sp-tab" data-tab="done">📂 Terminées</button>
+    <button class="sp-tab" data-tab="stats">📊</button>
+  </div>
+
+  <!-- Search -->
+  <div class="sp-search">
+    <input type="text" id="searchInput" placeholder="🔍 Rechercher patient, assureur, référence..." />
+  </div>
+
+  <!-- Mission List -->
+  <div class="sp-list" id="missionList">
+    <div class="sp-empty">Chargement...</div>
+  </div>
+
+  <!-- Mission Detail (hidden by default) -->
+  <div class="sp-detail" id="missionDetail" style="display:none">
+    <div class="sp-detail-header">
+      <button class="sp-back" id="btnBack">← Retour</button>
+      <span class="sp-detail-status" id="detailStatus"></span>
+    </div>
+
+    <div class="sp-detail-patient" id="detailPatient"></div>
+
+    <!-- PDF Preview -->
+    <div class="sp-detail-section sp-pdf-section" id="pdfSection" style="display:none">
+      <div class="sp-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>📄 Document source</span>
+        <button class="sp-pdf-toggle" id="pdfToggle">▼ Masquer</button>
+      </div>
+      <div id="pdfContainer" class="sp-pdf-container">
+        <iframe id="pdfFrame" class="sp-pdf-frame"></iframe>
+      </div>
+    </div>
+
+    <div class="sp-detail-section">
+      <div class="sp-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Données extraites</span>
+        <button class="sp-btn-copy-all" id="btnCopyAll">📋 Copier tout</button>
+      </div>
+      <div id="detailFields"></div>
+    </div>
+
+    <div class="sp-detail-section" id="alertsSection" style="display:none">
+      <div class="sp-section-title">⚠️ Alertes</div>
+      <div id="detailAlerts"></div>
+    </div>
+
+    <div class="sp-detail-section">
+      <div class="sp-section-title">Historique</div>
+      <div id="detailHistory"></div>
+    </div>
+
+    <div class="sp-detail-section">
+      <div class="sp-section-title">Infos extraction</div>
+      <div id="detailMeta"></div>
+    </div>
+
+    <div class="sp-actions">
+      <button class="sp-btn sp-btn-extract" id="btnExtract">🔍 Extraire (Claude)</button>
+      <button class="sp-btn sp-btn-preview" id="btnPreview">👁 Prévisualiser</button>
+      <button class="sp-btn sp-btn-fill" id="btnFill">⚡ Remplir SOON</button>
+      <button class="sp-btn sp-btn-validate" id="btnValidate">✓ Valider</button>
+      <button class="sp-btn sp-btn-reject" id="btnReject">✕ Rejeter</button>
+      <button class="sp-btn sp-btn-review" id="btnNeedsReview">⚠ À revoir</button>
+      <button class="sp-btn sp-btn-restore" id="btnRestore">↩ Restaurer</button>
+    </div>
+  </div>
+
+  <!-- Stats panel -->
+  <div class="sp-stats" id="statsPanel" style="display:none">
+    <div class="sp-stats-grid">
+      <div class="sp-stat-card"><div class="sp-stat-val" id="sTotal">0</div><div class="sp-stat-label">Total</div></div>
+      <div class="sp-stat-card"><div class="sp-stat-val" id="sMonth">0</div><div class="sp-stat-label">Ce mois</div></div>
+      <div class="sp-stat-card"><div class="sp-stat-val" id="sCost">0€</div><div class="sp-stat-label">Coût total</div></div>
+      <div class="sp-stat-card"><div class="sp-stat-val" id="sAvgTime">0s</div><div class="sp-stat-label">Temps moy.</div></div>
+    </div>
+    <div class="sp-section-title">Par assureur</div>
+    <div id="sAssurers"></div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
