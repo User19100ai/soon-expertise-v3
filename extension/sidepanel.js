@@ -52,6 +52,7 @@ document.querySelectorAll('.sp-tab').forEach(tab => {
     document.getElementById('missionList').style.display = '';
     document.getElementById('missionDetail').style.display = 'none';
     document.getElementById('statsPanel').style.display = 'none';
+    document.getElementById('importPanel').style.display = 'none';
     document.querySelector('.sp-search').style.display = '';
 
     if (currentTab === 'stats') {
@@ -59,6 +60,10 @@ document.querySelectorAll('.sp-tab').forEach(tab => {
       document.getElementById('statsPanel').style.display = '';
       document.querySelector('.sp-search').style.display = 'none';
       loadStats();
+    } else if (currentTab === 'import') {
+      document.getElementById('missionList').style.display = 'none';
+      document.getElementById('importPanel').style.display = '';
+      document.querySelector('.sp-search').style.display = 'none';
     } else {
       loadMissions();
     }
@@ -512,6 +517,378 @@ function formatSize(bytes) {
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ══════════════════════════════════════════════
+// ── IMPORT DIRECT (analyse immédiate Claude) ──
+// ══════════════════════════════════════════════
+
+const importApiKeyInput = document.getElementById('importApiKey');
+const importMistralKeyInput = document.getElementById('importMistralKey');
+const importModelSelect = document.getElementById('importModel');
+const importSaveKeysBtn = document.getElementById('importSaveKeys');
+const checkClaudeBtn = document.getElementById('checkClaude');
+const checkMistralBtn = document.getElementById('checkMistral');
+const keyStatusEl = document.getElementById('keyStatus');
+const importDropZone = document.getElementById('importDropZone');
+const importFileInput = document.getElementById('importFileInput');
+const importTabFile = document.getElementById('importTabFile');
+const importTabText = document.getElementById('importTabText');
+const importPanelFile = document.getElementById('importPanelFile');
+const importPanelText = document.getElementById('importPanelText');
+const importOcrText = document.getElementById('importOcrText');
+const importBtnAnalyze = document.getElementById('importBtnAnalyze');
+const importStatus = document.getElementById('importStatus');
+const importStatusText = document.getElementById('importStatusText');
+const importSpinner = document.getElementById('importSpinner');
+const importDataCard = document.getElementById('importDataCard');
+const importDataRows = document.getElementById('importDataRows');
+const importBtnClear = document.getElementById('importBtnClear');
+const importBtnFill = document.getElementById('importBtnFill');
+
+let importExtractedData = {};
+
+// ── Charger config sauvegardée ──
+chrome.storage.local.get(['claudeApiKey', 'mistralApiKey', 'importModel', 'lastImportData'], (res) => {
+  if (res.claudeApiKey) importApiKeyInput.value = res.claudeApiKey;
+  if (res.mistralApiKey) importMistralKeyInput.value = res.mistralApiKey;
+  if (res.importModel) importModelSelect.value = res.importModel;
+  if (res.lastImportData) {
+    importExtractedData = res.lastImportData;
+    renderImportDataCard(importExtractedData);
+    showImportStatus('success', 'Données du dernier import restaurées');
+  }
+});
+
+// ── Sauvegarder les clés ──
+importSaveKeysBtn.addEventListener('click', () => {
+  const claudeKey = importApiKeyInput.value.trim();
+  const mistralKey = importMistralKeyInput.value.trim();
+  const model = importModelSelect.value;
+  chrome.storage.local.set({
+    claudeApiKey: claudeKey,
+    mistralApiKey: mistralKey,
+    importModel: model
+  });
+  importSaveKeysBtn.textContent = '✓ Sauvegardé !';
+  importSaveKeysBtn.classList.add('saved');
+  setTimeout(() => {
+    importSaveKeysBtn.textContent = 'Sauvegarder les clés';
+    importSaveKeysBtn.classList.remove('saved');
+  }, 2000);
+});
+
+// ── Vérification clé Claude ──
+checkClaudeBtn.addEventListener('click', async () => {
+  const key = importApiKeyInput.value.trim();
+  if (!key) { showKeyStatus('err', 'Clé Claude vide'); return; }
+  checkClaudeBtn.classList.add('checking');
+  checkClaudeBtn.textContent = '...';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'ping' }]
+      })
+    });
+    if (resp.ok) {
+      checkClaudeBtn.className = 'sp-key-check valid';
+      checkClaudeBtn.textContent = '✓';
+      showKeyStatus('ok', 'Clé Claude active');
+    } else {
+      const err = await resp.json().catch(() => ({}));
+      checkClaudeBtn.className = 'sp-key-check invalid';
+      checkClaudeBtn.textContent = '✕';
+      showKeyStatus('err', 'Claude : ' + (err.error?.message || 'HTTP ' + resp.status));
+    }
+  } catch (e) {
+    checkClaudeBtn.className = 'sp-key-check invalid';
+    checkClaudeBtn.textContent = '✕';
+    showKeyStatus('err', 'Claude : erreur réseau');
+  }
+  setTimeout(() => { checkClaudeBtn.className = 'sp-key-check'; checkClaudeBtn.textContent = '?'; }, 5000);
+});
+
+// ── Vérification clé Mistral ──
+checkMistralBtn.addEventListener('click', async () => {
+  const key = importMistralKeyInput.value.trim();
+  if (!key) { showKeyStatus('err', 'Clé Mistral vide'); return; }
+  checkMistralBtn.classList.add('checking');
+  checkMistralBtn.textContent = '...';
+  try {
+    const resp = await fetch('https://api.mistral.ai/v1/models', {
+      headers: { 'Authorization': 'Bearer ' + key }
+    });
+    if (resp.ok) {
+      checkMistralBtn.className = 'sp-key-check valid';
+      checkMistralBtn.textContent = '✓';
+      showKeyStatus('ok', 'Clé Mistral active');
+    } else {
+      checkMistralBtn.className = 'sp-key-check invalid';
+      checkMistralBtn.textContent = '✕';
+      showKeyStatus('err', 'Mistral : clé invalide ou expirée (HTTP ' + resp.status + ')');
+    }
+  } catch (e) {
+    checkMistralBtn.className = 'sp-key-check invalid';
+    checkMistralBtn.textContent = '✕';
+    showKeyStatus('err', 'Mistral : erreur réseau');
+  }
+  setTimeout(() => { checkMistralBtn.className = 'sp-key-check'; checkMistralBtn.textContent = '?'; }, 5000);
+});
+
+function showKeyStatus(type, msg) {
+  keyStatusEl.style.display = 'block';
+  keyStatusEl.className = 'sp-key-status ' + type;
+  keyStatusEl.textContent = msg;
+  setTimeout(() => { keyStatusEl.style.display = 'none'; }, 6000);
+}
+
+// Tabs file/text
+importTabFile.addEventListener('click', () => {
+  importTabFile.classList.add('active'); importTabText.classList.remove('active');
+  importPanelFile.style.display = ''; importPanelText.style.display = 'none';
+});
+importTabText.addEventListener('click', () => {
+  importTabText.classList.add('active'); importTabFile.classList.remove('active');
+  importPanelText.style.display = ''; importPanelFile.style.display = 'none';
+});
+
+// Drop zone
+importDropZone.addEventListener('click', () => importFileInput.click());
+importDropZone.addEventListener('dragover', (e) => { e.preventDefault(); importDropZone.classList.add('dragover'); });
+importDropZone.addEventListener('dragleave', () => importDropZone.classList.remove('dragover'));
+importDropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  importDropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && isImportAccepted(file)) handleImportFile(file);
+  else showImportStatus('error', 'Format non supporté (PDF, PNG, JPG, HEIC)');
+});
+importFileInput.addEventListener('change', () => {
+  if (importFileInput.files[0]) handleImportFile(importFileInput.files[0]);
+});
+
+// Text analyze
+importBtnAnalyze.addEventListener('click', async () => {
+  const text = importOcrText.value.trim();
+  if (!text) { showImportStatus('error', "Collez du texte avant d'analyser"); return; }
+  hideImportDataCard();
+  await importExtractFromText(text);
+});
+
+// Clear
+importBtnClear.addEventListener('click', () => {
+  importExtractedData = {};
+  chrome.storage.local.remove('lastImportData');
+  hideImportDataCard();
+  importStatus.style.display = 'none';
+  importFileInput.value = '';
+});
+
+// Fill
+importBtnFill.addEventListener('click', async () => {
+  importBtnFill.disabled = true; importBtnFill.textContent = '⏳ Remplissage...';
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.url?.includes('soon-expertise.fr')) {
+    showImportStatus('error', "Ouvrez soon-expertise.fr dans l'onglet actif");
+    importBtnFill.disabled = false; importBtnFill.textContent = '⚡ Remplir le formulaire';
+    return;
+  }
+  chrome.tabs.sendMessage(tab.id, { action: 'fillForm', data: importExtractedData }, (response) => {
+    if (chrome.runtime.lastError) {
+      showImportStatus('error', 'Rechargez la page soon-expertise puis réessayez');
+    } else if (response && response.success) {
+      showImportStatus('success', '✓ Formulaire rempli ! Vérifiez et enregistrez.');
+      importBtnFill.textContent = '✓ Rempli !';
+    } else {
+      showImportStatus('error', 'Erreur : ' + ((response && response.error) || 'inconnue'));
+    }
+    importBtnFill.disabled = false;
+    setTimeout(() => { importBtnFill.textContent = '⚡ Remplir le formulaire'; }, 3000);
+  });
+});
+
+// ── Prompt ──
+const IMPORT_PROMPT = `Tu es un assistant expert en extraction de données de missions d'expertise médicale française.
+Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans texte avant ou après.
+
+{
+  "client_type": "Assureur ou Tribunal ou Expert ou Avocat ou Autre",
+  "client_name": "nom de la compagnie ou du mandant",
+  "contact_gestionnaire": "nom du gestionnaire de sinistre si mentionné",
+  "reference_client": "numéro de dossier côté client",
+  "date_sinistre": "JJ/MM/AAAA",
+  "date_souscription": "JJ/MM/AAAA si mentionné",
+  "patient_civilite": "Madame ou Monsieur ou Autre",
+  "patient_prenom": "prénom de la victime",
+  "patient_nom": "nom de famille de la victime",
+  "patient_dob": "JJ/MM/AAAA",
+  "patient_adresse": "adresse complète",
+  "patient_telephone": "numéro de téléphone principal",
+  "patient_telephone2": "second numéro si mentionné",
+  "patient_email": "email ou courriel de la victime",
+  "patient_sexe": "M si homme (Né le / Monsieur), F si femme (Née le / Madame)",
+  "representant_legal": "nom du représentant légal si mineur ou sous tutelle",
+  "blessures": "blessures ou pathologies signalées"
+}
+
+Si une info est absente : null.`;
+
+// ── Helpers ──
+function isImportAccepted(file) {
+  const name = (file.name || '').toLowerCase();
+  if (file.type === 'application/pdf') return true;
+  if (file.type.startsWith('image/')) return true;
+  if (name.endsWith('.heic') || name.endsWith('.heif')) return true;
+  return false;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function getSelectedModel() {
+  return importModelSelect.value || 'claude-opus-4-6';
+}
+
+async function callClaudeDirect(apiKey, messageContent) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: getSelectedModel(),
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: messageContent }]
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'HTTP ' + resp.status);
+  }
+  return resp.json();
+}
+
+async function handleImportFile(file) {
+  showImportStatus('loading', 'Lecture : ' + file.name);
+  hideImportDataCard();
+
+  const apiKey = importApiKeyInput.value.trim();
+  if (!apiKey) { showImportStatus('error', 'Clé API Claude manquante — sauvegardez-la d\'abord'); return; }
+
+  try {
+    const base64 = await fileToBase64(file);
+    const name = (file.name || '').toLowerCase();
+    const modelName = getSelectedModel().includes('opus') ? 'Opus' : 'Sonnet';
+    let content;
+
+    if (file.type === 'application/pdf') {
+      showImportStatus('loading', `Analyse du PDF par Claude ${modelName}...`);
+      content = [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+        { type: 'text', text: IMPORT_PROMPT }
+      ];
+    } else {
+      showImportStatus('loading', `Analyse de l'image par Claude ${modelName}...`);
+      let mime = file.type || 'image/jpeg';
+      if (name.endsWith('.heic') || name.endsWith('.heif')) mime = 'image/jpeg';
+      content = [
+        { type: 'image', source: { type: 'base64', media_type: mime.startsWith('image/') ? mime : 'image/jpeg', data: base64 } },
+        { type: 'text', text: IMPORT_PROMPT }
+      ];
+    }
+
+    const data = await callClaudeDirect(apiKey, content);
+    handleImportResponse(data);
+  } catch (err) {
+    showImportStatus('error', 'Erreur : ' + err.message);
+  }
+}
+
+async function importExtractFromText(text) {
+  const apiKey = importApiKeyInput.value.trim();
+  if (!apiKey) { showImportStatus('error', 'Clé API Claude manquante — sauvegardez-la d\'abord'); return; }
+  const modelName = getSelectedModel().includes('opus') ? 'Opus' : 'Sonnet';
+  showImportStatus('loading', `Analyse par Claude ${modelName}...`);
+  try {
+    const data = await callClaudeDirect(apiKey, [
+      { type: 'text', text: IMPORT_PROMPT + '\n\nTexte de la mission :\n---\n' + text + '\n---' }
+    ]);
+    handleImportResponse(data);
+  } catch (err) {
+    showImportStatus('error', 'Erreur : ' + err.message);
+  }
+}
+
+function handleImportResponse(data) {
+  const text = data.content[0].text.trim().replace(/```json|```/g, '').trim();
+  importExtractedData = JSON.parse(text);
+  chrome.storage.local.set({ lastImportData: importExtractedData });
+  showImportStatus('success', 'Extraction réussie !');
+  renderImportDataCard(importExtractedData);
+}
+
+const IMPORT_LABELS = {
+  client_type: 'Type', client_name: 'Assureur', contact_gestionnaire: 'Gestion.',
+  reference_client: 'Réf. client', date_sinistre: 'Sinistre', date_souscription: 'Souscrip.',
+  patient_civilite: 'Civilité', patient_prenom: 'Prénom', patient_nom: 'Nom',
+  patient_dob: 'Naissance', patient_adresse: 'Adresse', patient_telephone: 'Tél.',
+  patient_telephone2: 'Tél. 2', patient_email: 'Email', patient_sexe: 'Sexe',
+  representant_legal: 'Repr. légal', blessures: 'Blessures'
+};
+
+function renderImportDataCard(data) {
+  importDataRows.innerHTML = '';
+  for (const [key, val] of Object.entries(data)) {
+    if (!val) continue;
+    const row = document.createElement('div');
+    row.className = 'sp-import-row';
+    const label = document.createElement('span');
+    label.className = 'sp-import-label';
+    label.textContent = IMPORT_LABELS[key] || key;
+    const valueWrap = document.createElement('span');
+    valueWrap.className = 'sp-import-value';
+    const input = document.createElement('input');
+    input.type = 'text'; input.value = String(val); input.dataset.key = key;
+    input.addEventListener('input', () => {
+      importExtractedData[key] = input.value;
+      chrome.storage.local.set({ lastImportData: importExtractedData });
+    });
+    valueWrap.appendChild(input);
+    row.appendChild(label); row.appendChild(valueWrap);
+    importDataRows.appendChild(row);
+  }
+  importDataCard.style.display = '';
+  importBtnFill.style.display = '';
+}
+
+function hideImportDataCard() {
+  importDataCard.style.display = 'none';
+  importBtnFill.style.display = 'none';
+}
+
+function showImportStatus(type, msg) {
+  importStatus.style.display = 'flex';
+  importStatus.className = 'sp-import-status ' + type;
+  importStatusText.textContent = msg;
+  importSpinner.style.display = type === 'loading' ? 'block' : 'none';
+}
 
 // ── PDF Preview ──
 async function loadPdfPreview(m) {

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Soon Expertise",
-  "version": "3.5",
+  "version": "3.8",
   "description": "File de traitement synchronisée pour missions d'expertise médicale — soon-expertise.fr",
   "permissions": [
     "activeTab",
@@ -12,7 +12,9 @@
   ],
   "host_permissions": [
     "https://app.soon-expertise.fr/*",
-    "http://127.0.0.1:9721/*"
+    "http://127.0.0.1:9721/*",
+    "https://api.anthropic.com/*",
+    "https://api.mistral.ai/*"
   ],
   "background": {
     "service_worker": "background.js"

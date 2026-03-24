@@ -141,3 +141,65 @@ body { background: var(--bg); font-family: system-ui, -apple-system, sans-serif;
 .sp-btn-copy-all.copied { border-color: var(--accent); color: var(--accent); background: rgba(0,212,170,0.1); }
 .sp-pdf-toggle:hover { background: rgba(0,153,255,0.1); }
 .sp-pdf-img { width: 100%; border-radius: 6px; }
+
+/* Import panel */
+.sp-import { flex: 1; overflow-y: auto; }
+.sp-import-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.sp-import-input { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; color: var(--text); font-size: 11px; font-family: monospace; outline: none; }
+.sp-import-input:focus { border-color: var(--accent); }
+.sp-import-btn-sm { background: var(--border); border: none; border-radius: 6px; padding: 6px 10px; color: var(--muted); font-size: 10px; cursor: pointer; white-space: nowrap; }
+.sp-import-btn-sm:hover { background: var(--accent); color: var(--bg); }
+
+.sp-import-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.sp-import-tab { flex: 1; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; }
+.sp-import-tab.active { background: rgba(0,212,170,0.1); border-color: var(--accent); color: var(--accent); }
+.sp-import-tab:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+.sp-drop-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface); margin-bottom: 12px; }
+.sp-drop-zone:hover, .sp-drop-zone.dragover { border-color: var(--accent); background: rgba(0,212,170,0.05); }
+
+.sp-import-textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-size: 11px; font-family: monospace; line-height: 1.6; resize: vertical; outline: none; margin-bottom: 8px; min-height: 120px; }
+.sp-import-textarea:focus { border-color: var(--accent); }
+.sp-import-textarea::placeholder { color: var(--muted); }
+
+.sp-import-btn-analyze { width: 100%; padding: 11px; background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; }
+.sp-import-btn-analyze:hover { background: rgba(0,212,170,0.1); }
+
+.sp-import-status { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 11px; font-family: monospace; }
+.sp-import-status.loading { background: rgba(0,153,255,0.1); border: 1px solid rgba(0,153,255,0.3); color: var(--accent2); }
+.sp-import-status.success { background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3); color: var(--accent); }
+.sp-import-status.error { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); color: var(--error); }
+
+.sp-import-spinner { width: 13px; height: 13px; border: 2px solid rgba(0,153,255,0.3); border-top-color: var(--accent2); border-radius: 50%; flex-shrink: 0; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.sp-import-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+.sp-import-card-header { padding: 8px 12px; background: rgba(0,212,170,0.08); border-bottom: 1px solid var(--border); font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: space-between; }
+.sp-import-btn-clear { background: none; border: none; color: var(--muted); font-size: 10px; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.sp-import-btn-clear:hover { color: var(--error); background: rgba(255,107,107,0.1); }
+
+.sp-import-row { display: grid; grid-template-columns: 80px 1fr; gap: 6px; padding: 5px 12px; align-items: center; }
+.sp-import-row:hover { background: rgba(255,255,255,0.02); }
+.sp-import-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.sp-import-value input { background: transparent; border: none; border-bottom: 1px solid transparent; color: var(--text); font-size: 11px; font-weight: 600; width: 100%; outline: none; padding: 1px 0; }
+.sp-import-value input:focus { border-bottom-color: var(--accent); }
+
+/* Config */
+.sp-config-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.sp-config-label { font-size: 11px; color: var(--muted); width: 90px; flex-shrink: 0; }
+.sp-config-select { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; color: var(--text); font-size: 11px; outline: none; cursor: pointer; }
+.sp-config-select:focus { border-color: var(--accent); }
+
+.sp-key-check { width: 30px; height: 30px; background: var(--border); border: none; border-radius: 6px; color: var(--muted); font-size: 13px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.sp-key-check:hover { background: var(--accent2); color: var(--bg); }
+.sp-key-check.valid { background: var(--accent); color: var(--bg); }
+.sp-key-check.invalid { background: var(--error); color: #fff; }
+.sp-key-check.checking { opacity: 0.5; pointer-events: none; }
+
+.sp-key-status { margin-top: 8px; padding: 8px 10px; border-radius: 6px; font-size: 10px; font-family: monospace; }
+.sp-key-status.ok { background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3); color: var(--accent); }
+.sp-key-status.err { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); color: var(--error); }
+
+.sp-import-btn-save { width: 100%; padding: 10px; background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 6px; }
+.sp-import-btn-save:hover { background: rgba(0,212,170,0.1); }
+.sp-import-btn-save.saved { background: var(--accent); color: var(--bg); border-color: var(--accent); }

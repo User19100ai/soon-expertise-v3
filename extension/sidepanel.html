@@ -21,6 +21,7 @@
     <button class="sp-tab" data-tab="review">⚠️ À revoir <span class="sp-badge" id="badgeReview">0</span></button>
     <button class="sp-tab" data-tab="ready">✅ Prêtes <span class="sp-badge" id="badgeReady">0</span></button>
     <button class="sp-tab" data-tab="done">📂 Terminées</button>
+    <button class="sp-tab" data-tab="import">📤 Import</button>
     <button class="sp-tab" data-tab="stats">📊</button>
   </div>
 
@@ -85,6 +86,89 @@
       <button class="sp-btn sp-btn-reject" id="btnReject">✕ Rejeter</button>
       <button class="sp-btn sp-btn-review" id="btnNeedsReview">⚠ À revoir</button>
       <button class="sp-btn sp-btn-restore" id="btnRestore">↩ Restaurer</button>
+    </div>
+  </div>
+
+  <!-- Import panel -->
+  <div class="sp-import" id="importPanel" style="display:none">
+    <div style="padding:16px;">
+      <!-- Configuration -->
+      <div class="sp-import-section">
+        <div class="sp-section-title">Configuration</div>
+
+        <!-- Modèle -->
+        <div class="sp-config-row">
+          <label class="sp-config-label">Modèle Claude :</label>
+          <select id="importModel" class="sp-config-select">
+            <option value="claude-opus-4-6">Claude Opus 4.6 (meilleur)</option>
+            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (rapide)</option>
+          </select>
+        </div>
+
+        <!-- Clé Claude -->
+        <div class="sp-config-row">
+          <label class="sp-config-label">Clé Claude :</label>
+          <div style="display:flex;gap:6px;flex:1;">
+            <input type="password" id="importApiKey" placeholder="sk-ant-..." class="sp-import-input" style="flex:1;" />
+            <button class="sp-key-check" id="checkClaude" title="Vérifier la clé">?</button>
+          </div>
+        </div>
+
+        <!-- Clé Mistral -->
+        <div class="sp-config-row">
+          <label class="sp-config-label">Clé Mistral :</label>
+          <div style="display:flex;gap:6px;flex:1;">
+            <input type="password" id="importMistralKey" placeholder="..." class="sp-import-input" style="flex:1;" />
+            <button class="sp-key-check" id="checkMistral" title="Vérifier la clé">?</button>
+          </div>
+        </div>
+
+        <!-- Status clés -->
+        <div id="keyStatus" class="sp-key-status" style="display:none;"></div>
+
+        <!-- Sauvegarder -->
+        <button class="sp-import-btn-save" id="importSaveKeys">Sauvegarder les clés</button>
+      </div>
+
+      <!-- Tabs File / Text -->
+      <div class="sp-import-tabs">
+        <button class="sp-import-tab active" id="importTabFile">📄 Fichier</button>
+        <button class="sp-import-tab" id="importTabText">📋 Coller texte</button>
+      </div>
+
+      <!-- Drop Zone -->
+      <div id="importPanelFile">
+        <div class="sp-drop-zone" id="importDropZone">
+          <input type="file" id="importFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif" style="display:none;" />
+          <div style="font-size:28px;margin-bottom:6px;">📄</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:3px;">Déposer le fichier de mission</div>
+          <div style="font-size:10px;color:var(--muted);">PDF · PNG · JPG · HEIC — glisser ou cliquer</div>
+        </div>
+      </div>
+
+      <!-- Text paste -->
+      <div id="importPanelText" style="display:none;">
+        <textarea id="importOcrText" class="sp-import-textarea" placeholder="Collez ici le texte de la mission (copié depuis le PDF, un email, etc.)..." rows="7"></textarea>
+        <button class="sp-import-btn-analyze" id="importBtnAnalyze">🔍 Analyser le texte</button>
+      </div>
+
+      <!-- Status -->
+      <div class="sp-import-status" id="importStatus" style="display:none;">
+        <div class="sp-import-spinner" id="importSpinner"></div>
+        <span id="importStatusText"></span>
+      </div>
+
+      <!-- Data Card -->
+      <div class="sp-import-card" id="importDataCard" style="display:none;">
+        <div class="sp-import-card-header">
+          <span>✓ Données extraites</span>
+          <button class="sp-import-btn-clear" id="importBtnClear">✕ Effacer</button>
+        </div>
+        <div id="importDataRows"></div>
+      </div>
+
+      <!-- Fill button -->
+      <button class="sp-btn sp-btn-fill" id="importBtnFill" style="display:none;width:100%;margin-top:12px;">⚡ Remplir le formulaire</button>
     </div>
   </div>
 
