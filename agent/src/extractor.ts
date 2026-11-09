@@ -128,7 +128,7 @@ export async function extractMission(
     const durationMs = Date.now() - startTime;
     const rawText = provider === 'mistral'
       ? result.choices[0].message.content
-      : result.content[0].text;
+      : (result.content.find((b: any) => b.type === "text")?.text ?? "");
 
     const cleanJson = rawText.trim().replace(/```json|```/g, '').trim();
     let extractedData: ExtractedData;
@@ -155,7 +155,7 @@ export async function extractMission(
 
     // Coût estimé
     const costEur = provider === 'claude'
-      ? (1500 * 3 + 300 * 15) / 1_000_000  // Sonnet
+      ? (1500 * 2 + 300 * 10) / 1_000_000  // Sonnet 5.5
       : (1500 * 2 + 300 * 6) / 1_000_000;  // Mistral Large
 
     // Déterminer le statut
@@ -170,7 +170,7 @@ export async function extractMission(
       alerts,
       extraction: {
         provider,
-        model: provider === 'claude' ? 'claude-sonnet-4-6' : 'mistral-large-latest',
+        model: provider === 'claude' ? 'claude-sonnet-5-5' : 'mistral-large-latest',
         prompt_version: 'v3',
         duration_ms: durationMs,
         cost_eur: costEur,
@@ -282,8 +282,10 @@ async function callClaude(base64: string, mime: string) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
+      model: 'claude-sonnet-5-5', // 2026-10-08 : 2 $/10 $ contre 3 $/15 $
+      max_tokens: 4096, // la réflexion compte dans le plafond
+      thinking: { type: 'adaptive' },
+      output_config: { effort: 'low' },
       messages: [{ role: 'user', content }],
     }),
   });
